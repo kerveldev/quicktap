@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_KEY" force="true" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="/>
+        <env name="APP_ENV" force="true" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" force="true" value="file"/>
+        <env name="BCRYPT_ROUNDS" force="true" value="4"/>
+        <env name="BROADCAST_CONNECTION" force="true" value="null"/>
+        <env name="CACHE_STORE" force="true" value="array"/>
+        <env name="DB_CONNECTION" force="true" value="sqlite"/>
+        <env name="DB_DATABASE" force="true" value=":memory:"/>
+        <env name="DB_URL" force="true" value=""/>
+        <env name="MAIL_MAILER" force="true" value="array"/>
+        <env name="QUEUE_CONNECTION" force="true" value="sync"/>
+        <env name="SESSION_DRIVER" force="true" value="array"/>
+        <env name="PULSE_ENABLED" force="true" value="false"/>
+        <env name="TELESCOPE_ENABLED" force="true" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" force="true" value="false"/>
+    </php>
+</phpunit>
