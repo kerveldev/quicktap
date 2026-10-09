@@ -1,0 +1,52 @@
+# Installed dependencies (including nested packages).
+vendor/
+node_modules/
+
+# Local environment and Composer credentials; keep safe setup placeholders.
+.env
+.env.*
+!.env.example
+/auth.json
+
+# Generated frontend bundles and copied assets. Originals stay in assets/.
+/public/build/
+/public/hot
+/public/assets/
+/public/storage
+/build/
+/dist/
+/out/
+/.output/
+
+# Tool caches, coverage and test reports.
+/.cache/
+/.vite/
+/.vite-temp/
+/.phpunit.cache/
+/.phpunit.result.cache
+/.php-cs-fixer.cache
+/.phpunit-watcher.yml
+/coverage/
+/.nyc_output/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
+/test-results/
+*.tsbuildinfo
+
+# Laravel runtime directories have their own .gitignore placeholders.
+/storage/*.key
+/database/*.sqlite*
+
+# Logs, temporary files and editor/OS debris.
+*.log
+/logs/
+/tmp/
+/temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
