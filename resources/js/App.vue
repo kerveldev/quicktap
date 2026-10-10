@@ -202,25 +202,14 @@ onMounted(() => {
 <template>
     <div class="app-shell" @pointerdown.capture="audio.unlock" @keydown.capture="audio.unlock">
         <header class="topbar">
-            <a class="brand" href="/" aria-label="QuickTap home"
-                ><span class="brand-icon">ϟ</span>quick<span>tap</span
-                ><span class="brand-dot">®</span></a
-            >
+            <a class="brand" href="/" aria-label="QuickTap home"><span
+                    class="brand-icon">ϟ</span>quick<span>tap</span><span class="brand-dot">®</span></a>
             <div class="topbar-right">
-                <span class="edition">THE REFLEX ARCADE <span>VOL. 001</span></span
-                ><button
-                    ref="settingsButton"
-                    class="icon-button"
-                    aria-label="Audio settings"
-                    @click="toggleSettings"
-                >
-                    ☷</button
-                ><button
-                    class="icon-button"
+                <span class="edition">THE REFLEX ARCADE <span>VOL. 001</span></span><button ref="settingsButton"
+                    class="icon-button" aria-label="Audio settings" @click="toggleSettings">
+                    ☷</button><button class="icon-button"
                     :aria-label="audio.settings.muted ? 'Unmute audio' : 'Mute audio'"
-                    :aria-pressed="audio.settings.muted"
-                    @click="audio.settings.muted = !audio.settings.muted"
-                >
+                    :aria-pressed="audio.settings.muted" @click="audio.settings.muted = !audio.settings.muted">
                     {{ audio.settings.muted ? '♪̸' : '♫' }}
                 </button>
             </div>
@@ -237,8 +226,7 @@ onMounted(() => {
                         <div>
                             <p class="eyebrow">YOUR NEXT “JUST ONE MORE.”</p>
                             <h1>
-                                Make every <br /><span>tap count.</span
-                                ><span class="heading-spark">✳</span>
+                                Make every <br /><span>tap count.</span><span class="heading-spark">✳</span>
                             </h1>
                         </div>
                         <p class="intro-copy">
@@ -246,38 +234,28 @@ onMounted(() => {
                         </p>
                     </div>
 
-                    <section
-                        class="arcade"
-                        :class="{ 'is-playing': screen === 'game' }"
-                        aria-label="QuickTap arcade"
-                    >
+                    <section class="arcade" :class="{ 'is-playing': screen === 'game' }" aria-label="QuickTap arcade">
                         <div class="arcade-top">
-                            <span
-                                ><i class="status-dot"></i>
+                            <span><i class="status-dot"></i>
                                 {{
                                     screen === 'game'
                                         ? paused
                                             ? 'PAUSED'
                                             : 'LIVE SESSION'
                                         : 'QUICKTAP / CLASSIC'
-                                }}</span
-                            ><span>{{
-                                screen === 'game'
-                                    ? `LEVEL ${level.toString().padStart(2, '0')}`
-                                    : '3 LIVES. NO SECOND GUESSES.'
-                            }}</span>
+                                }}</span><span>{{
+                                    screen === 'game'
+                                        ? `LEVEL ${level.toString().padStart(2, '0')}`
+                                        : '3 LIVES. NO SECOND GUESSES.'
+                                }}</span>
                         </div>
                         <div v-if="screen === 'menu'" class="menu-screen">
                             <div class="hero-art" aria-hidden="true">
-                                <span class="orbit orbit-one"></span
-                                ><span class="orbit orbit-two"></span
-                                ><span class="art-plus plus-one">+</span
-                                ><span class="art-plus plus-two">✧</span
-                                ><GameAsset name="coin" class="floating-coin" /><GameAsset
-                                    name="box"
-                                    class="hero-box"
-                                /><span class="art-tag">+10 PTS</span
-                                ><GameAsset name="bomb" class="hero-bomb" />
+                                <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span
+                                    class="art-plus plus-one">+</span><span class="art-plus plus-two">✧</span>
+                                <GameAsset name="coin" class="floating-coin" />
+                                <GameAsset name="box" class="hero-box" /><span class="art-tag">+10 PTS</span>
+                                <GameAsset name="bomb" class="hero-bomb" />
                             </div>
                             <p class="eyebrow lime">READY WHEN YOU ARE</p>
                             <h2 ref="heading" tabindex="-1">Got quick hands?</h2>
@@ -287,18 +265,10 @@ onMounted(() => {
                             <form class="start-form" @submit.prevent="start">
                                 <label for="player-name">YOUR PLAYER NAME</label>
                                 <div class="input-wrap">
-                                    <span aria-hidden="true">›</span
-                                    ><input
-                                        id="player-name"
-                                        v-model="player"
-                                        maxlength="24"
-                                        placeholder="Enter your name"
-                                        autocomplete="nickname"
-                                        required
-                                        :aria-invalid="!!nameError"
-                                        aria-describedby="name-help"
-                                        :disabled="!!pending"
-                                    />
+                                    <span aria-hidden="true">›</span><input id="player-name" v-model="player"
+                                        maxlength="24" placeholder="Enter your name" autocomplete="nickname" required
+                                        :aria-invalid="!!nameError" aria-describedby="name-help"
+                                        :disabled="!!pending" />
                                 </div>
                                 <p id="name-help" class="field-help" :class="{ error: nameError }">
                                     {{
@@ -306,7 +276,9 @@ onMounted(() => {
                                     }}
                                 </p>
                                 <button class="primary-button" :disabled="!!pending" type="submit">
-                                    Let’s play <span><UiIcon /></span>
+                                    Let’s play <span>
+                                        <UiIcon />
+                                    </span>
                                 </button>
                             </form>
                             <p class="screen-footnote">
@@ -317,64 +289,42 @@ onMounted(() => {
                         <div v-else-if="screen === 'game'" class="game-screen">
                             <div class="hud">
                                 <div>
-                                    <span class="stat-label">SCORE</span
-                                    ><strong>{{ formattedScore }}</strong>
+                                    <span class="stat-label">SCORE</span><strong>{{ formattedScore }}</strong>
                                 </div>
                                 <div class="coin-stat">
                                     <GameAsset name="coin" /><strong>{{ state.coins }}</strong>
                                 </div>
                                 <div class="lives">
-                                    <span class="sr-only">{{ state.lives }} lives remaining</span
-                                    ><GameAsset
-                                        v-for="n in 3"
-                                        :key="n"
-                                        name="life"
-                                        :class="{ lost: n > state.lives }"
-                                    />
+                                    <span class="sr-only">{{ state.lives }} lives remaining</span>
+                                    <GameAsset v-for="n in 3" :key="n" name="life" :class="{ lost: n > state.lives }" />
                                 </div>
-                                <button
-                                    class="icon-button"
-                                    :aria-label="paused ? 'Resume game' : 'Pause game'"
-                                    @click="togglePause"
-                                >
+                                <button class="icon-button" :aria-label="paused ? 'Resume game' : 'Pause game'"
+                                    @click="togglePause">
                                     {{ paused ? '▶' : 'Ⅱ' }}
                                 </button>
                             </div>
                             <div class="pace">
-                                <span>WAVE {{ state.wave }}</span
-                                ><span>{{ (duration / 1000).toFixed(2) }}s / wave</span>
+                                <span>WAVE {{ state.wave }}</span><span>{{ (duration / 1000).toFixed(2) }}s /
+                                    wave</span>
                             </div>
                             <div class="timer-track">
                                 <div :style="{ width: `${progress}%` }"></div>
                             </div>
                             <div class="playfield" :class="{ 'field-paused': paused }">
                                 <div v-for="cell in 12" :key="cell" class="field-cell">
-                                    <template
-                                        v-for="box in state.boxes.filter(
-                                            (b) => b.cell === cell - 1,
-                                        )"
-                                        :key="box.id"
-                                        ><button
-                                            v-if="!paused"
-                                            class="target"
-                                            :class="box.kind"
-                                            :style="{ left: `${box.x}%`, top: `${box.y}%` }"
-                                            :aria-label="
-                                                box.kind === 'gold'
+                                    <template v-for="box in state.boxes.filter(
+                                        (b) => b.cell === cell - 1,
+                                    )" :key="box.id"><button v-if="!paused" class="target" :class="box.kind"
+                                            :style="{ left: `${box.x}%`, top: `${box.y}%` }" :aria-label="box.kind === 'gold'
                                                     ? 'Golden box: collect 10 points'
                                                     : 'TNT: avoid this box'
-                                            "
-                                            @pointerdown.prevent="game.tap(box.id)"
-                                            @click="
+                                                " @pointerdown.prevent="game.tap(box.id)" @click="
                                                 (event) => {
                                                     if (event.detail === 0) game.tap(box.id)
                                                 }
-                                            "
-                                        >
-                                            <GameAsset
-                                                :name="box.kind === 'gold' ? 'box' : 'bomb'"
-                                            /></button
-                                    ></template>
+                                            ">
+                                            <GameAsset :name="box.kind === 'gold' ? 'box' : 'bomb'" />
+                                        </button></template>
                                 </div>
                                 <div v-if="paused" class="pause-overlay">
                                     <span class="eyebrow lime">TAKE A BREATHER</span>
@@ -388,8 +338,7 @@ onMounted(() => {
                             <div class="game-bottom">
                                 <span role="status" aria-live="polite">{{
                                     feedback || 'Find the gold. Leave the TNT.'
-                                }}</span
-                                ><span>GOLD +10 <span class="muted">/</span> TNT −1 ♥</span>
+                                    }}</span><span>GOLD +10 <span class="muted">/</span> TNT −1 ♥</span>
                             </div>
                         </div>
 
@@ -398,59 +347,45 @@ onMounted(() => {
                             <p class="eyebrow lime">THAT WAS A GOOD RUN, {{ player }}.</p>
                             <h2 ref="heading" tabindex="-1">Quick hands.<br />One more round?</h2>
                             <div class="final-score">
-                                <span class="stat-label">FINAL SCORE</span
-                                ><strong>{{ formattedScore }}</strong
-                                ><span>POINTS</span>
+                                <span class="stat-label">FINAL SCORE</span><strong>{{ formattedScore
+                                    }}</strong><span>POINTS</span>
                             </div>
                             <div class="result-stats">
-                                <span
-                                    ><GameAsset name="coin" /> {{ state.coins }} coins
-                                    collected</span
-                                ><span>Wave {{ state.wave }} reached</span>
+                                <span>
+                                    <GameAsset name="coin" /> {{ state.coins }} coins
+                                    collected
+                                </span><span>Wave {{ state.wave }} reached</span>
                             </div>
                             <p class="save-status" role="status" :class="{ error: saveFailed }">
                                 {{ saveMessage }}
                             </p>
-                            <button
-                                v-if="saveFailed"
-                                class="text-button"
-                                :disabled="saving"
-                                @click="submit"
-                            >
-                                Retry saving ↻</button
-                            ><button
-                                v-if="pending && !saving"
-                                class="text-button muted"
-                                @click="discard"
-                            >
-                                Discard unsaved score</button
-                            ><button
-                                class="primary-button"
-                                :disabled="!!pending || saving"
-                                @click="start"
-                            >
-                                Play again <span><UiIcon /></span></button
-                            ><button class="text-button" @click="menu">Back to the arcade</button>
+                            <button v-if="saveFailed" class="text-button" :disabled="saving" @click="submit">
+                                Retry saving ↻</button><button v-if="pending && !saving" class="text-button muted"
+                                @click="discard">
+                                Discard unsaved score</button><button class="primary-button"
+                                :disabled="!!pending || saving" @click="start">
+                                Play again <span>
+                                    <UiIcon />
+                                </span></button><button class="text-button" @click="menu">Back to the arcade</button>
                         </div>
                         <div class="arcade-bottom">
-                            <span>CLICK. TAP. REPEAT.</span><span>✳</span
-                            ><span>BUILT FOR THE QUICK.</span>
+                            <span>CLICK. TAP. REPEAT.</span><span>✳</span><span>BUILT FOR THE QUICK.</span>
                         </div>
                     </section>
                     <div v-if="screen === 'menu' && pending" class="recovery" role="status">
                         <p>{{ saveMessage }}</p>
                         <button class="text-button" :disabled="saving" @click="submit">
-                            {{ saving ? 'Saving…' : 'Retry saving' }}</button
-                        ><button class="text-button" :disabled="saving" @click="discard">
+                            {{ saving ? 'Saving…' : 'Retry saving' }}</button><button class="text-button"
+                            :disabled="saving" @click="discard">
                             Discard score
                         </button>
                     </div>
                     <div class="game-tips">
-                        <span><span class="keycap">+</span> Click or tap to collect</span
-                        ><span><span class="keycap">♥</span> Three lives. Make them count.</span
-                        ><span class="tip-desktop"
-                            ><span class="keycap"><UiIcon /></span> Faster with every wave</span
-                        >
+                        <span><span class="keycap">+</span> Click or tap to collect</span><span><span
+                                class="keycap">♥</span> Three lives.
+                            Make them count.</span><span class="tip-desktop"><span class="keycap">
+                                <UiIcon />
+                            </span> Faster with every wave</span>
                     </div>
                 </section>
 
@@ -460,45 +395,37 @@ onMounted(() => {
                             <div>
                                 <p class="eyebrow">THE FAST-HANDS CLUB</p>
                                 <h2>
-                                    Top tappers<span><UiIcon /></span>
+                                    Top tappers<span>
+                                        <UiIcon />
+                                    </span>
                                 </h2>
                             </div>
                             <span class="trophy">♜</span>
                         </div>
                         <div class="board-subtitle">
-                            <span>ALL-TIME TOP 10</span
-                            ><button
-                                class="refresh-button"
-                                :disabled="loading"
-                                aria-label="Refresh leaderboard"
-                                @click="refreshLeaderboard"
-                            >
+                            <span>ALL-TIME TOP 10</span><button class="refresh-button" :disabled="loading"
+                                aria-label="Refresh leaderboard" @click="refreshLeaderboard">
                                 {{ loading ? '···' : '↻' }}
                             </button>
                         </div>
                         <div class="board-head"><span>RANK / PLAYER</span><span>POINTS</span></div>
                         <div v-if="loading && !scores.length" class="board-empty" role="status">
-                            <span class="empty-symbol">↻</span
-                            ><strong>Finding the quick ones…</strong>
+                            <span class="empty-symbol">↻</span><strong>Finding the quick ones…</strong>
                         </div>
                         <div v-else-if="leaderboardError" class="board-empty" role="status">
-                            <span class="empty-symbol">⌁</span
-                            ><strong>The board’s taking a breather.</strong>
+                            <span class="empty-symbol">⌁</span><strong>The board’s taking a breather.</strong>
                             <p>{{ leaderboardError }}</p>
                             <button class="text-button" @click="refreshLeaderboard">
-                                Try again <UiIcon />
+                                Try again
+                                <UiIcon />
                             </button>
                         </div>
                         <ol v-else-if="scores.length" class="score-list">
-                            <li
-                                v-for="(entry, index) in scores"
-                                :key="entry.id"
-                                :class="{ 'your-score': entry.id === savedId }"
-                            >
+                            <li v-for="(entry, index) in scores" :key="entry.id"
+                                :class="{ 'your-score': entry.id === savedId }">
                                 <span class="rank">{{ String(index + 1).padStart(2, '0') }}</span>
                                 <div class="player-entry">
-                                    <strong>{{ entry.player_name }}</strong
-                                    ><time :datetime="entry.created_at">{{
+                                    <strong>{{ entry.player_name }}</strong><time :datetime="entry.created_at">{{
                                         new Date(entry.created_at).toLocaleDateString(undefined, {
                                             month: 'short',
                                             day: 'numeric',
@@ -507,17 +434,15 @@ onMounted(() => {
                                 </div>
                                 <strong class="entry-score">{{
                                     entry.score.toLocaleString()
-                                }}</strong>
+                                    }}</strong>
                             </li>
                         </ol>
                         <div v-else class="board-empty">
-                            <span class="empty-symbol">⚑</span
-                            ><strong>A fresh board. Your first place?</strong>
+                            <span class="empty-symbol">⚑</span><strong>A fresh board. Your first place?</strong>
                             <p>Play a round to set the score to beat.</p>
                         </div>
                         <div class="personal-best">
-                            <span>YOUR LOCAL BEST</span
-                            ><strong>{{ best.toLocaleString() }} <small>PTS</small></strong>
+                            <span>YOUR LOCAL BEST</span><strong>{{ best.toLocaleString() }} <small>PTS</small></strong>
                         </div>
                         <p class="board-footer">A little friendly competition never hurt.</p>
                     </section>
@@ -557,57 +482,42 @@ onMounted(() => {
             </div>
         </main>
         <footer class="site-footer">
-            <span class="footer-logo">quicktap<span>®</span></span
-            ><span>A SMALL ARCADE FOR YOUR BIG BREAK.</span
-            ><span
-                >MADE TO BE PLAYED. <span class="lime"><UiIcon /></span
-            ></span>
+            <span class="footer-logo">
+                quicktap<span>®</span>
+            </span>
+
+            <span>A SMALL ARCADE FOR YOUR BIG BREAK.</span>
+
+            <a href="https://kerveldev.com" target="_blank" rel="noopener noreferrer" class="kerveldev-brand"
+                aria-label="Visit KerVelDev website">
+                <img :src="'/assets/images/kerveldev-logo.png'" alt="" class="kerveldev-logo" />
+
+                <span>
+                    POWERED BY
+                    <strong>KerVelDev</strong>
+                </span>
+            </a>
         </footer>
 
         <div v-if="settingsOpen" class="modal-backdrop" @click.self="toggleSettings">
-            <section
-                ref="settingsPanel"
-                class="settings-dialog panel"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="audio-title"
-                tabindex="-1"
-                @keydown="settingsKeys"
-            >
+            <section ref="settingsPanel" class="settings-dialog panel" role="dialog" aria-modal="true"
+                aria-labelledby="audio-title" tabindex="-1" @keydown="settingsKeys">
                 <div class="panel-title">
                     <div>
                         <p class="eyebrow">SET YOUR OWN VIBE</p>
                         <h2 id="audio-title">Sound check.</h2>
                     </div>
-                    <button
-                        class="icon-button"
-                        aria-label="Close audio settings"
-                        @click="toggleSettings"
-                    >
+                    <button class="icon-button" aria-label="Close audio settings" @click="toggleSettings">
                         ×
                     </button>
                 </div>
-                <label class="volume-label" for="music-volume"
-                    >Music <span>{{ audio.settings.music }}%</span></label
-                ><input
-                    id="music-volume"
-                    v-model.number="audio.settings.music"
-                    type="range"
-                    min="0"
-                    max="100"
-                /><label class="volume-label" for="effects-volume"
-                    >Sound effects <span>{{ audio.settings.effects }}%</span></label
-                ><input
-                    id="effects-volume"
-                    v-model.number="audio.settings.effects"
-                    type="range"
-                    min="0"
-                    max="100"
-                /><button
-                    class="mute-button"
-                    :aria-pressed="audio.settings.muted"
-                    @click="audio.settings.muted = !audio.settings.muted"
-                >
+                <label class="volume-label" for="music-volume">Music <span>{{ audio.settings.music
+                        }}%</span></label><input id="music-volume" v-model.number="audio.settings.music" type="range"
+                    min="0" max="100" /><label class="volume-label" for="effects-volume">Sound effects <span>{{
+                        audio.settings.effects
+                        }}%</span></label><input id="effects-volume" v-model.number="audio.settings.effects"
+                    type="range" min="0" max="100" /><button class="mute-button" :aria-pressed="audio.settings.muted"
+                    @click="audio.settings.muted = !audio.settings.muted">
                     {{ audio.settings.muted ? 'Unmute all audio' : 'Mute all audio' }}
                     <span>{{ audio.settings.muted ? 'OFF' : 'ON' }}</span>
                 </button>

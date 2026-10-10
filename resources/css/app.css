@@ -1263,3 +1263,40 @@ input[type='range'] {
     vertical-align: middle;
     flex-shrink: 0;
 }
+
+
+/* KerVelDev branding */
+
+.kerveldev-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.kerveldev-brand:hover {
+    opacity: 0.75;
+}
+
+.kerveldev-logo {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.kerveldev-brand > span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+.kerveldev-brand strong {
+    color: #d5ff65;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
