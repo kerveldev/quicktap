@@ -1264,7 +1264,6 @@ input[type='range'] {
     flex-shrink: 0;
 }
 
-
 /* KerVelDev branding */
 
 .kerveldev-brand {
@@ -1299,4 +1298,215 @@ input[type='range'] {
     color: #d5ff65;
     font-size: 12px;
     letter-spacing: 0.5px;
+}
+/* Survival Rush: keep image dimensions bounded even with full-resolution assets. */
+.game-asset {
+    min-width: 0;
+    min-height: 0;
+}
+.game-asset img {
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+}
+.asset-life {
+    width: 24px;
+    height: 24px;
+    overflow: hidden;
+}
+.lives {
+    flex-shrink: 0;
+}
+.arcade-column,
+.sidebar,
+.game-screen {
+    min-width: 0;
+}
+.rush-hud {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 0 24px 14px;
+}
+.countdown strong {
+    display: block;
+    font: 700 40px monospace;
+    color: var(--lime);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+.countdown small {
+    font-size: 20px;
+    margin-left: 3px;
+}
+.combo-stat {
+    text-align: right;
+}
+.combo-stat strong {
+    display: block;
+    font: 700 24px monospace;
+    color: var(--lime);
+}
+.combo-stat small {
+    font-size: 10px;
+    font-weight: 400;
+    color: #bacb9f;
+}
+.combo-next {
+    display: block;
+    margin-top: 4px;
+    font: 8px monospace;
+    color: #a1b28f;
+}
+.survival-track {
+    height: 6px;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+.wave-track {
+    height: 2px;
+    opacity: 0.55;
+}
+.urgent .countdown strong {
+    color: #ffad83;
+}
+.urgent .survival-track > div {
+    background: #ffad83;
+}
+.urgent:not(.paused) .countdown {
+    animation: rush-pulse 1s ease-in-out infinite;
+}
+.urgent .playfield {
+    box-shadow: inset 0 0 0 1px #eb825338;
+    border-radius: 8px;
+}
+.target {
+    padding: 0;
+    overflow: hidden;
+}
+.hit-feedback {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 1;
+    border-radius: 8px;
+    animation: tap-flash 0.65s ease-out forwards;
+}
+.hit-feedback.gold {
+    color: var(--lime);
+    box-shadow: inset 0 0 25px #d5fb6525;
+}
+.hit-feedback.tnt {
+    color: #ffae91;
+    background: #ed63431a;
+    box-shadow: inset 0 0 25px #ed634340;
+}
+.hit-feedback > span {
+    font: 700 28px monospace;
+    text-shadow: 0 2px 6px #111;
+}
+.combo-burst {
+    font: 700 13px monospace;
+    letter-spacing: 1px;
+    background: #253119f0;
+    border: 1px solid var(--lime);
+    padding: 10px 15px;
+    border-radius: 30px;
+}
+.pause-overlay {
+    z-index: 2;
+}
+.run-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 22px 0 14px;
+    text-align: center;
+}
+.run-summary dt {
+    color: #a1b28f;
+    font-size: 10px;
+}
+.run-summary dd {
+    font: 700 21px monospace;
+    color: var(--lime);
+    margin: 7px 0 0;
+}
+.end-reason {
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    color: #d9e5c9;
+}
+@keyframes tap-flash {
+    0% {
+        opacity: 1;
+    }
+    25% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+@keyframes rush-pulse {
+    50% {
+        opacity: 0.65;
+    }
+}
+@media (max-width: 520px) {
+    .asset-life {
+        width: 20px;
+        height: 20px;
+    }
+    .rush-hud {
+        padding: 0 16px 14px;
+    }
+    .countdown strong {
+        font-size: 34px;
+    }
+    .game-bottom {
+        flex-wrap: wrap;
+    }
+    .game-tips {
+        flex-wrap: wrap;
+    }
+}
+@media (max-width: 360px) {
+    .intro h1 {
+        font-size: 48px;
+    }
+    .heading-spark {
+        right: -44px;
+        font-size: 34px;
+    }
+    .hud {
+        gap: 7px;
+    }
+    .hud > div:first-child strong {
+        font-size: 25px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .urgent:not(.paused) .countdown,
+    .hit-feedback {
+        animation: none !important;
+    }
+    .hit-feedback {
+        display: none;
+    }
+}
+
+/* Keep all four target rows visible when the arcade is scrolled into view. */
+.playfield {
+    max-height: max(200px, calc(100svh - 330px));
 }

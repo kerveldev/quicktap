@@ -4,11 +4,13 @@ import GameAsset from './components/GameAsset.vue'
 import UiIcon from './components/UiIcon.vue'
 import { useAudio } from './composables/useAudio'
 import { useGame } from './composables/useGame'
+import { difficulty, TARGET_WIDTH, TARGET_HEIGHT } from './game/engine'
 import { getLeaderboard, saveScore, type Score, type Submission } from './services/api'
 
 const screen = ref<'menu' | 'game' | 'over'>('menu')
 const player = ref('')
 const nameError = ref('')
+const brandLogoAvailable = ref(true)
 const audio = useAudio()
 const settingsOpen = ref(false)
 const scores = ref<Score[]>([])
@@ -24,12 +26,26 @@ const feedback = ref('')
 const heading = ref<HTMLElement>()
 const settingsButton = ref<HTMLButtonElement>()
 const settingsPanel = ref<HTMLElement>()
-const game = useGame(endGame, (kind) => {
-    audio.effect(kind === 'gold' ? 'coin' : 'explosion')
-    feedback.value = kind === 'gold' ? '+10 points' : 'TNT! −1 life'
-})
-const { state, paused, duration, progress } = game
-const level = computed(() => Math.floor((state.value.wave - 1) / 5) + 1)
+const feedbackId = ref(0)
+const hitKind = ref<'gold' | 'tnt'>('gold')
+const leaderboardPanel = ref<HTMLElement>()
+const arcadePanel = ref<HTMLElement>()
+const game = useGame(
+    endGame,
+    (kind, bonus) => {
+        audio.effect(kind === 'gold' ? 'coin' : 'explosion', bonus ? 1.35 : 1)
+        if (bonus) audio.effect('tap', 1.5)
+        hitKind.value = kind
+        feedback.value =
+            kind === 'gold'
+                ? `+10 points${bonus ? ` · +${bonus} combo bonus!` : ''}`
+                : 'TNT! −1 life · Combo reset'
+        feedbackId.value++
+    },
+    () => audio.effect('tap', 1.25),
+)
+const { state, paused, duration, seconds, urgent, progress, waveProgress } = game
+const level = computed(() => difficulty(state.value.elapsedMs) + 1)
 const formattedScore = computed(() => state.value.score.toLocaleString())
 
 async function refreshLeaderboard() {
@@ -83,6 +99,8 @@ function start() {
     if (pending.value) return
     nameError.value = ''
     feedback.value = ''
+    feedbackId.value = 0
+    hitKind.value = 'gold'
     saveMessage.value = ''
     savedId.value = null
     try {
@@ -94,8 +112,11 @@ function start() {
     audio.screen('gameplay')
     screen.value = 'game'
     game.start()
+    void nextTick(() => arcadePanel.value?.scrollIntoView({ block: 'start', behavior: 'auto' }))
 }
 function endGame() {
+    if (screen.value !== 'game') return
+    audio.effect(state.value.endReason === 'time' ? 'coin' : 'tap', 0.8)
     screen.value = 'over'
     audio.screen('mainscreen')
     best.value = Math.max(best.value, state.value.score)
@@ -127,6 +148,13 @@ function menu() {
     screen.value = 'menu'
     audio.screen('mainscreen')
     audio.effect('tap')
+}
+async function showLeaderboard() {
+    audio.effect('tap')
+    void refreshLeaderboard()
+    await nextTick()
+    leaderboardPanel.value?.focus({ preventScroll: true })
+    leaderboardPanel.value?.scrollIntoView({ block: 'start', behavior: 'auto' })
 }
 function togglePause() {
     if (paused.value) {
@@ -202,14 +230,25 @@ onMounted(() => {
 <template>
     <div class="app-shell" @pointerdown.capture="audio.unlock" @keydown.capture="audio.unlock">
         <header class="topbar">
-            <a class="brand" href="/" aria-label="QuickTap home"><span
-                    class="brand-icon">ϟ</span>quick<span>tap</span><span class="brand-dot">®</span></a>
+            <a class="brand" href="/" aria-label="QuickTap home"
+                ><span class="brand-icon">ϟ</span>quick<span>tap</span
+                ><span class="brand-dot">®</span></a
+            >
             <div class="topbar-right">
-                <span class="edition">THE REFLEX ARCADE <span>VOL. 001</span></span><button ref="settingsButton"
-                    class="icon-button" aria-label="Audio settings" @click="toggleSettings">
-                    ☷</button><button class="icon-button"
+                <span class="edition">THE REFLEX ARCADE <span>VOL. 001</span></span
+                ><button
+                    ref="settingsButton"
+                    class="icon-button"
+                    aria-label="Audio settings"
+                    @click="toggleSettings"
+                >
+                    ☷</button
+                ><button
+                    class="icon-button"
                     :aria-label="audio.settings.muted ? 'Unmute audio' : 'Mute audio'"
-                    :aria-pressed="audio.settings.muted" @click="audio.settings.muted = !audio.settings.muted">
+                    :aria-pressed="audio.settings.muted"
+                    @click="audio.settings.muted = !audio.settings.muted"
+                >
                     {{ audio.settings.muted ? '♪̸' : '♫' }}
                 </button>
             </div>
@@ -226,7 +265,8 @@ onMounted(() => {
                         <div>
                             <p class="eyebrow">YOUR NEXT “JUST ONE MORE.”</p>
                             <h1>
-                                Make every <br /><span>tap count.</span><span class="heading-spark">✳</span>
+                                Make every <br /><span>tap count.</span
+                                ><span class="heading-spark">✳</span>
                             </h1>
                         </div>
                         <p class="intro-copy">
@@ -234,41 +274,60 @@ onMounted(() => {
                         </p>
                     </div>
 
-                    <section class="arcade" :class="{ 'is-playing': screen === 'game' }" aria-label="QuickTap arcade">
+                    <section
+                        ref="arcadePanel"
+                        class="arcade"
+                        :class="{ 'is-playing': screen === 'game' }"
+                        aria-label="QuickTap arcade"
+                    >
                         <div class="arcade-top">
-                            <span><i class="status-dot"></i>
+                            <span
+                                ><i class="status-dot"></i>
                                 {{
                                     screen === 'game'
                                         ? paused
                                             ? 'PAUSED'
                                             : 'LIVE SESSION'
-                                        : 'QUICKTAP / CLASSIC'
-                                }}</span><span>{{
-                                    screen === 'game'
-                                        ? `LEVEL ${level.toString().padStart(2, '0')}`
-                                        : '3 LIVES. NO SECOND GUESSES.'
-                                }}</span>
+                                        : 'SURVIVAL RUSH'
+                                }}</span
+                            ><span>{{
+                                screen === 'game'
+                                    ? `LEVEL ${level.toString().padStart(2, '0')}`
+                                    : '60 SECONDS. 3 LIVES.'
+                            }}</span>
                         </div>
                         <div v-if="screen === 'menu'" class="menu-screen">
                             <div class="hero-art" aria-hidden="true">
-                                <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span
-                                    class="art-plus plus-one">+</span><span class="art-plus plus-two">✧</span>
+                                <span class="orbit orbit-one"></span
+                                ><span class="orbit orbit-two"></span
+                                ><span class="art-plus plus-one">+</span
+                                ><span class="art-plus plus-two">✧</span>
                                 <GameAsset name="coin" class="floating-coin" />
-                                <GameAsset name="box" class="hero-box" /><span class="art-tag">+10 PTS</span>
+                                <GameAsset name="box" class="hero-box" /><span class="art-tag"
+                                    >+10 PTS</span
+                                >
                                 <GameAsset name="bomb" class="hero-bomb" />
                             </div>
                             <p class="eyebrow lime">READY WHEN YOU ARE</p>
-                            <h2 ref="heading" tabindex="-1">Got quick hands?</h2>
+                            <h2 ref="heading" tabindex="-1">Survival Rush</h2>
                             <p class="screen-copy">
-                                A little focus. A lot of gold. Let’s find your high score.
+                                60 seconds. Chase gold, build combos, and survive the rush.
                             </p>
                             <form class="start-form" @submit.prevent="start">
                                 <label for="player-name">YOUR PLAYER NAME</label>
                                 <div class="input-wrap">
-                                    <span aria-hidden="true">›</span><input id="player-name" v-model="player"
-                                        maxlength="24" placeholder="Enter your name" autocomplete="nickname" required
-                                        :aria-invalid="!!nameError" aria-describedby="name-help"
-                                        :disabled="!!pending" />
+                                    <span aria-hidden="true">›</span
+                                    ><input
+                                        id="player-name"
+                                        v-model="player"
+                                        maxlength="24"
+                                        placeholder="Enter your name"
+                                        autocomplete="nickname"
+                                        required
+                                        :aria-invalid="!!nameError"
+                                        aria-describedby="name-help"
+                                        :disabled="!!pending"
+                                    />
                                 </div>
                                 <p id="name-help" class="field-help" :class="{ error: nameError }">
                                     {{
@@ -276,7 +335,8 @@ onMounted(() => {
                                     }}
                                 </p>
                                 <button class="primary-button" :disabled="!!pending" type="submit">
-                                    Let’s play <span>
+                                    Let’s play
+                                    <span>
                                         <UiIcon />
                                     </span>
                                 </button>
@@ -286,45 +346,120 @@ onMounted(() => {
                             </p>
                         </div>
 
-                        <div v-else-if="screen === 'game'" class="game-screen">
+                        <div
+                            v-else-if="screen === 'game'"
+                            class="game-screen"
+                            :class="{ urgent, paused }"
+                        >
                             <div class="hud">
                                 <div>
-                                    <span class="stat-label">SCORE</span><strong>{{ formattedScore }}</strong>
+                                    <span class="stat-label">SCORE</span
+                                    ><strong>{{ formattedScore }}</strong>
                                 </div>
-                                <div class="coin-stat">
+                                <div class="coin-stat" aria-label="Coins collected">
                                     <GameAsset name="coin" /><strong>{{ state.coins }}</strong>
                                 </div>
                                 <div class="lives">
                                     <span class="sr-only">{{ state.lives }} lives remaining</span>
-                                    <GameAsset v-for="n in 3" :key="n" name="life" :class="{ lost: n > state.lives }" />
+                                    <GameAsset
+                                        v-for="n in 3"
+                                        :key="n"
+                                        name="life"
+                                        :class="{ lost: n > state.lives }"
+                                    />
                                 </div>
-                                <button class="icon-button" :aria-label="paused ? 'Resume game' : 'Pause game'"
-                                    @click="togglePause">
-                                    {{ paused ? '▶' : 'Ⅱ' }}
+                                <button
+                                    class="icon-button"
+                                    :aria-label="paused ? 'Resume game' : 'Pause game'"
+                                    @click="togglePause"
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="18"
+                                        height="18"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path v-if="paused" d="M7 4v16l14-8z" />
+                                        <path v-else d="M6 4h4v16H6zM14 4h4v16h-4z" />
+                                    </svg>
                                 </button>
                             </div>
-                            <div class="pace">
-                                <span>WAVE {{ state.wave }}</span><span>{{ (duration / 1000).toFixed(2) }}s /
-                                    wave</span>
+                            <div class="rush-hud">
+                                <div class="countdown" role="timer" aria-label="Time remaining">
+                                    <span class="stat-label">TIME LEFT</span
+                                    ><strong>{{ seconds }}<small>s</small></strong>
+                                </div>
+                                <div class="combo-stat">
+                                    <span class="stat-label">COMBO STREAK</span
+                                    ><strong>{{ state.streak }}<small> in a row</small></strong
+                                    ><span class="combo-next">3 / 5 / 10 = +5 / +15 / +30</span>
+                                </div>
                             </div>
-                            <div class="timer-track">
+                            <div
+                                class="timer-track survival-track"
+                                role="progressbar"
+                                aria-label="Survival time remaining"
+                                :aria-valuenow="seconds"
+                                :aria-valuemin="0"
+                                :aria-valuemax="60"
+                            >
                                 <div :style="{ width: `${progress}%` }"></div>
+                            </div>
+                            <div class="pace">
+                                <span
+                                    >WAVE {{ state.wave }} ·
+                                    {{ urgent ? 'FINAL RUSH' : 'STAY SHARP' }}</span
+                                ><span>{{ (duration / 1000).toFixed(2) }}s / wave</span>
+                            </div>
+                            <div class="timer-track wave-track" aria-hidden="true">
+                                <div :style="{ width: `${waveProgress}%` }"></div>
                             </div>
                             <div class="playfield" :class="{ 'field-paused': paused }">
                                 <div v-for="cell in 12" :key="cell" class="field-cell">
-                                    <template v-for="box in state.boxes.filter(
-                                        (b) => b.cell === cell - 1,
-                                    )" :key="box.id"><button v-if="!paused" class="target" :class="box.kind"
-                                            :style="{ left: `${box.x}%`, top: `${box.y}%` }" :aria-label="box.kind === 'gold'
+                                    <template
+                                        v-for="box in state.boxes.filter(
+                                            (b) => b.cell === cell - 1,
+                                        )"
+                                        :key="box.id"
+                                        ><button
+                                            v-if="!paused"
+                                            class="target"
+                                            :class="box.kind"
+                                            :style="{
+                                                left: `${box.x}%`,
+                                                top: `${box.y}%`,
+                                                width: `${TARGET_WIDTH}%`,
+                                                height: `${TARGET_HEIGHT}%`,
+                                            }"
+                                            :aria-label="
+                                                box.kind === 'gold'
                                                     ? 'Golden box: collect 10 points'
                                                     : 'TNT: avoid this box'
-                                                " @pointerdown.prevent="game.tap(box.id)" @click="
+                                            "
+                                            @pointerdown.prevent="game.tap(box.id)"
+                                            @click="
                                                 (event) => {
                                                     if (event.detail === 0) game.tap(box.id)
                                                 }
-                                            ">
-                                            <GameAsset :name="box.kind === 'gold' ? 'box' : 'bomb'" />
-                                        </button></template>
+                                            "
+                                        >
+                                            <GameAsset
+                                                :name="box.kind === 'gold' ? 'box' : 'bomb'"
+                                            /></button
+                                    ></template>
+                                </div>
+                                <div
+                                    v-if="feedbackId && !paused"
+                                    :key="feedbackId"
+                                    class="hit-feedback"
+                                    :class="hitKind"
+                                    aria-hidden="true"
+                                >
+                                    <span>{{ hitKind === 'gold' ? '+10' : '−1 ♥' }}</span
+                                    ><strong v-if="state.lastBonus" class="combo-burst"
+                                        >{{ state.streak }} COMBO · +{{ state.lastBonus }}</strong
+                                    >
                                 </div>
                                 <div v-if="paused" class="pause-overlay">
                                     <span class="eyebrow lime">TAKE A BREATHER</span>
@@ -338,7 +473,8 @@ onMounted(() => {
                             <div class="game-bottom">
                                 <span role="status" aria-live="polite">{{
                                     feedback || 'Find the gold. Leave the TNT.'
-                                    }}</span><span>GOLD +10 <span class="muted">/</span> TNT −1 ♥</span>
+                                }}</span
+                                ><span>GOLD +10 <span class="muted">/</span> TNT −1 ♥</span>
                             </div>
                         </div>
 
@@ -347,50 +483,95 @@ onMounted(() => {
                             <p class="eyebrow lime">THAT WAS A GOOD RUN, {{ player }}.</p>
                             <h2 ref="heading" tabindex="-1">Quick hands.<br />One more round?</h2>
                             <div class="final-score">
-                                <span class="stat-label">FINAL SCORE</span><strong>{{ formattedScore
-                                    }}</strong><span>POINTS</span>
+                                <span class="stat-label">FINAL SCORE</span
+                                ><strong>{{ formattedScore }}</strong
+                                ><span>POINTS</span>
                             </div>
                             <div class="result-stats">
                                 <span>
-                                    <GameAsset name="coin" /> {{ state.coins }} coins
-                                    collected
-                                </span><span>Wave {{ state.wave }} reached</span>
+                                    <GameAsset name="coin" /> {{ state.coins }} coins collected </span
+                                ><span>Wave {{ state.wave }} reached</span>
                             </div>
+                            <dl class="run-summary">
+                                <div>
+                                    <dt>Highest combo</dt>
+                                    <dd>{{ state.highestCombo }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Time survived</dt>
+                                    <dd>{{ (state.elapsedMs / 1000).toFixed(1) }}s</dd>
+                                </div>
+                            </dl>
+                            <p class="end-reason">
+                                {{
+                                    state.endReason === 'time'
+                                        ? 'Time’s up — you survived the rush!'
+                                        : 'Out of lives — TNT ended your run.'
+                                }}
+                            </p>
                             <p class="save-status" role="status" :class="{ error: saveFailed }">
                                 {{ saveMessage }}
                             </p>
-                            <button v-if="saveFailed" class="text-button" :disabled="saving" @click="submit">
-                                Retry saving ↻</button><button v-if="pending && !saving" class="text-button muted"
-                                @click="discard">
-                                Discard unsaved score</button><button class="primary-button"
-                                :disabled="!!pending || saving" @click="start">
-                                Play again <span>
+                            <button
+                                v-if="saveFailed"
+                                class="text-button"
+                                :disabled="saving"
+                                @click="submit"
+                            >
+                                Retry saving ↻</button
+                            ><button
+                                v-if="pending && !saving"
+                                class="text-button muted"
+                                @click="discard"
+                            >
+                                Discard unsaved score</button
+                            ><button
+                                class="primary-button"
+                                :disabled="!!pending || saving"
+                                @click="start"
+                            >
+                                PLAY AGAIN
+                                <span>
                                     <UiIcon />
-                                </span></button><button class="text-button" @click="menu">Back to the arcade</button>
+                                </span></button
+                            ><button class="text-button" @click="showLeaderboard">
+                                LEADERBOARD</button
+                            ><button class="text-button muted" @click="menu">
+                                Back to the arcade
+                            </button>
                         </div>
                         <div class="arcade-bottom">
-                            <span>CLICK. TAP. REPEAT.</span><span>✳</span><span>BUILT FOR THE QUICK.</span>
+                            <span>CLICK. TAP. REPEAT.</span><span>✳</span
+                            ><span>BUILT FOR THE QUICK.</span>
                         </div>
                     </section>
                     <div v-if="screen === 'menu' && pending" class="recovery" role="status">
                         <p>{{ saveMessage }}</p>
                         <button class="text-button" :disabled="saving" @click="submit">
-                            {{ saving ? 'Saving…' : 'Retry saving' }}</button><button class="text-button"
-                            :disabled="saving" @click="discard">
+                            {{ saving ? 'Saving…' : 'Retry saving' }}</button
+                        ><button class="text-button" :disabled="saving" @click="discard">
                             Discard score
                         </button>
                     </div>
                     <div class="game-tips">
-                        <span><span class="keycap">+</span> Click or tap to collect</span><span><span
-                                class="keycap">♥</span> Three lives.
-                            Make them count.</span><span class="tip-desktop"><span class="keycap">
+                        <span><span class="keycap">+</span> Click or tap to collect</span
+                        ><span><span class="keycap">♥</span> Three lives. Make them count.</span
+                        ><span class="tip-desktop"
+                            ><span class="keycap">
                                 <UiIcon />
-                            </span> Faster with every wave</span>
+                            </span>
+                            A faster rush every 15 seconds</span
+                        >
                     </div>
                 </section>
 
                 <aside class="sidebar">
-                    <section class="leaderboard panel">
+                    <section
+                        ref="leaderboardPanel"
+                        class="leaderboard panel"
+                        tabindex="-1"
+                        aria-label="Leaderboard"
+                    >
                         <div class="panel-title">
                             <div>
                                 <p class="eyebrow">THE FAST-HANDS CLUB</p>
@@ -403,17 +584,24 @@ onMounted(() => {
                             <span class="trophy">♜</span>
                         </div>
                         <div class="board-subtitle">
-                            <span>ALL-TIME TOP 10</span><button class="refresh-button" :disabled="loading"
-                                aria-label="Refresh leaderboard" @click="refreshLeaderboard">
+                            <span>ALL-TIME TOP 10</span
+                            ><button
+                                class="refresh-button"
+                                :disabled="loading"
+                                aria-label="Refresh leaderboard"
+                                @click="refreshLeaderboard"
+                            >
                                 {{ loading ? '···' : '↻' }}
                             </button>
                         </div>
                         <div class="board-head"><span>RANK / PLAYER</span><span>POINTS</span></div>
                         <div v-if="loading && !scores.length" class="board-empty" role="status">
-                            <span class="empty-symbol">↻</span><strong>Finding the quick ones…</strong>
+                            <span class="empty-symbol">↻</span
+                            ><strong>Finding the quick ones…</strong>
                         </div>
                         <div v-else-if="leaderboardError" class="board-empty" role="status">
-                            <span class="empty-symbol">⌁</span><strong>The board’s taking a breather.</strong>
+                            <span class="empty-symbol">⌁</span
+                            ><strong>The board’s taking a breather.</strong>
                             <p>{{ leaderboardError }}</p>
                             <button class="text-button" @click="refreshLeaderboard">
                                 Try again
@@ -421,11 +609,15 @@ onMounted(() => {
                             </button>
                         </div>
                         <ol v-else-if="scores.length" class="score-list">
-                            <li v-for="(entry, index) in scores" :key="entry.id"
-                                :class="{ 'your-score': entry.id === savedId }">
+                            <li
+                                v-for="(entry, index) in scores"
+                                :key="entry.id"
+                                :class="{ 'your-score': entry.id === savedId }"
+                            >
                                 <span class="rank">{{ String(index + 1).padStart(2, '0') }}</span>
                                 <div class="player-entry">
-                                    <strong>{{ entry.player_name }}</strong><time :datetime="entry.created_at">{{
+                                    <strong>{{ entry.player_name }}</strong
+                                    ><time :datetime="entry.created_at">{{
                                         new Date(entry.created_at).toLocaleDateString(undefined, {
                                             month: 'short',
                                             day: 'numeric',
@@ -434,15 +626,17 @@ onMounted(() => {
                                 </div>
                                 <strong class="entry-score">{{
                                     entry.score.toLocaleString()
-                                    }}</strong>
+                                }}</strong>
                             </li>
                         </ol>
                         <div v-else class="board-empty">
-                            <span class="empty-symbol">⚑</span><strong>A fresh board. Your first place?</strong>
+                            <span class="empty-symbol">⚑</span
+                            ><strong>A fresh board. Your first place?</strong>
                             <p>Play a round to set the score to beat.</p>
                         </div>
                         <div class="personal-best">
-                            <span>YOUR LOCAL BEST</span><strong>{{ best.toLocaleString() }} <small>PTS</small></strong>
+                            <span>YOUR LOCAL BEST</span
+                            ><strong>{{ best.toLocaleString() }} <small>PTS</small></strong>
                         </div>
                         <p class="board-footer">A little friendly competition never hurt.</p>
                     </section>
@@ -453,7 +647,10 @@ onMounted(() => {
                             <GameAsset name="box" />
                             <div>
                                 <strong>Gold is the goal.</strong>
-                                <p>Tap golden boxes for a coin and 10 points.</p>
+                                <p>
+                                    Gold gives 1 coin + 10 points. Streaks of 3 / 5 / 10 add +5 /
+                                    +15 / +30 bonus points; the cycle repeats.
+                                </p>
                             </div>
                             <span class="rule-points">+10</span>
                         </div>
@@ -470,7 +667,8 @@ onMounted(() => {
                             <div>
                                 <strong>Don’t blink.</strong>
                                 <p>
-                                    Miss any gold in a wave? Lose one life. Waves speed up to 0.5s.
+                                    Survive 60 seconds. Missed gold is harmless; only TNT costs a
+                                    life. Waves speed up to 0.5s.
                                 </p>
                             </div>
                         </div>
@@ -482,15 +680,24 @@ onMounted(() => {
             </div>
         </main>
         <footer class="site-footer">
-            <span class="footer-logo">
-                quicktap<span>®</span>
-            </span>
+            <span class="footer-logo"> quicktap<span>®</span> </span>
 
             <span>A SMALL ARCADE FOR YOUR BIG BREAK.</span>
 
-            <a href="https://kerveldev.com" target="_blank" rel="noopener noreferrer" class="kerveldev-brand"
-                aria-label="Visit KerVelDev website">
-                <img :src="'/assets/images/kerveldev-logo.png'" alt="" class="kerveldev-logo" />
+            <a
+                href="https://kerveldev.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="kerveldev-brand"
+                aria-label="Visit KerVelDev website"
+            >
+                <img
+                    v-if="brandLogoAvailable"
+                    :src="'/assets/images/kerveldev-logo.png'"
+                    alt=""
+                    class="kerveldev-logo"
+                    @error="brandLogoAvailable = false"
+                />
 
                 <span>
                     POWERED BY
@@ -500,24 +707,49 @@ onMounted(() => {
         </footer>
 
         <div v-if="settingsOpen" class="modal-backdrop" @click.self="toggleSettings">
-            <section ref="settingsPanel" class="settings-dialog panel" role="dialog" aria-modal="true"
-                aria-labelledby="audio-title" tabindex="-1" @keydown="settingsKeys">
+            <section
+                ref="settingsPanel"
+                class="settings-dialog panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="audio-title"
+                tabindex="-1"
+                @keydown="settingsKeys"
+            >
                 <div class="panel-title">
                     <div>
                         <p class="eyebrow">SET YOUR OWN VIBE</p>
                         <h2 id="audio-title">Sound check.</h2>
                     </div>
-                    <button class="icon-button" aria-label="Close audio settings" @click="toggleSettings">
+                    <button
+                        class="icon-button"
+                        aria-label="Close audio settings"
+                        @click="toggleSettings"
+                    >
                         ×
                     </button>
                 </div>
-                <label class="volume-label" for="music-volume">Music <span>{{ audio.settings.music
-                        }}%</span></label><input id="music-volume" v-model.number="audio.settings.music" type="range"
-                    min="0" max="100" /><label class="volume-label" for="effects-volume">Sound effects <span>{{
-                        audio.settings.effects
-                        }}%</span></label><input id="effects-volume" v-model.number="audio.settings.effects"
-                    type="range" min="0" max="100" /><button class="mute-button" :aria-pressed="audio.settings.muted"
-                    @click="audio.settings.muted = !audio.settings.muted">
+                <label class="volume-label" for="music-volume"
+                    >Music <span>{{ audio.settings.music }}%</span></label
+                ><input
+                    id="music-volume"
+                    v-model.number="audio.settings.music"
+                    type="range"
+                    min="0"
+                    max="100"
+                /><label class="volume-label" for="effects-volume"
+                    >Sound effects <span>{{ audio.settings.effects }}%</span></label
+                ><input
+                    id="effects-volume"
+                    v-model.number="audio.settings.effects"
+                    type="range"
+                    min="0"
+                    max="100"
+                /><button
+                    class="mute-button"
+                    :aria-pressed="audio.settings.muted"
+                    @click="audio.settings.muted = !audio.settings.muted"
+                >
                     {{ audio.settings.muted ? 'Unmute all audio' : 'Mute all audio' }}
                     <span>{{ audio.settings.muted ? 'OFF' : 'ON' }}</span>
                 </button>
