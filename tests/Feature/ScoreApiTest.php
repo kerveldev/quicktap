@@ -20,10 +20,10 @@ class ScoreApiTest extends TestCase
 
     public function test_it_saves_a_score_and_retries_idempotently(): void
     {
-        $payload = ['submission_id' => (string) Str::uuid(), 'player_name' => '  Luna  ', 'score' => 120];
-        $this->postJson('/api/scores', $payload)->assertCreated()->assertJsonPath('data.player_name', 'Luna')->assertJsonPath('data.score', 120)->assertJsonStructure(['data' => ['id', 'created_at']]);
+        $payload = ['submission_id' => (string) Str::uuid(), 'player_name' => '  Luna  ', 'score' => 35];
+        $this->postJson('/api/scores', $payload)->assertCreated()->assertJsonPath('data.player_name', 'Luna')->assertJsonPath('data.score', 35)->assertJsonStructure(['data' => ['id', 'created_at']]);
         $payload['score'] = 500;
-        $this->postJson('/api/scores', $payload)->assertOk()->assertJsonPath('data.score', 120);
+        $this->postJson('/api/scores', $payload)->assertOk()->assertJsonPath('data.score', 35);
         $this->assertSame(1, Score::count());
     }
 

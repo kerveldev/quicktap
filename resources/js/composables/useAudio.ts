@@ -83,7 +83,7 @@ export function useAudio() {
         selected = name
         transition()
     }
-    function effect(name: 'tap' | 'coin' | 'explosion') {
+    function effect(name: 'tap' | 'coin' | 'explosion', playbackRate = 1) {
         if (!unlocked || settings.muted || !active || settings.effects === 0) return
         if (effects.size >= 8) {
             const oldest = effects.values().next().value!
@@ -92,6 +92,7 @@ export function useAudio() {
         }
         const audio = new Audio(`/assets/sounds/${name}.mp3`)
         audio.volume = settings.effects / 100
+        audio.playbackRate = playbackRate
         effects.add(audio)
         const remove = () => effects.delete(audio)
         audio.addEventListener('ended', remove, { once: true })
